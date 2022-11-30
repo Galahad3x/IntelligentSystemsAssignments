@@ -79,14 +79,14 @@ class ReflexAgent(Agent):
         # food considerations
         for food_pos in curr_food:    
             d = manhattanDistance(food_pos, newPos)
-            total_score += 3000 if d == 0 else 1.0 / (d**2)
+            total_score += 2000 if d == 0 else 1.0 / (d**2)
 
         # ghost considerations
         for ghost in newGhostStates:
             d = manhattanDistance(ghost.getPosition(), newPos) 
             if d > 1:
                 continue
-            total_score += 2000 if ghost.scaredTimer != 0 else -200
+            total_score += 3000 if ghost.scaredTimer != 0 else -3000
 
         return total_score
 
@@ -163,7 +163,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             )
             if u == v:
                 actions.append(a)
-            elif u > v:
+            elif u >= v:
                 v = u
                 actions = [a]
         
@@ -189,6 +189,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return v
 
     
+    
     def max_value(self, gameState, agent, depth):
         if self.terminal_test(gameState, depth):
             return self.evaluationFunction(gameState)
@@ -202,17 +203,97 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return v
 
 
+
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
+
+    best_action = None
 
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alpha = float("-inf")
+        beta = float("inf")
+        self.max_value(gameState, agent=0, alpha=alpha, beta=beta, depth=self.depth)
+        return self.best_action
+
+    def min_value(self, gameState, agent, alpha, beta, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)
+
+        v = float("inf")
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            if agent == gameState.getNumAgents() - 1:
+                v = min(
+                    v, self.max_value(succ, agent=0, alpha=alpha, beta=beta, depth=depth-1)
+                )
+
+            else:
+                v = min(
+                    v, self.min_value(succ, agent= agent + 1, alpha=alpha, beta=beta, depth=depth - 1)
+                )
+            
+            # chek if prune
+            if v < alpha:
+                return v
+
+            # update beta
+            beta = min(beta, v)
+        return v
+
+
+    def max_value(self, gameState, agent, alpha, beta, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)
+
+        v = float("-inf")
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            v = max(
+                v, self.min_value(succ, agent=1, alpha=alpha, beta=beta, depth=depth)
+            )
+            
+            # check if can prune
+            if v > beta:
+                return v  
+
+            # update alpha  
+            #alpha = max(alpha, v)
+            if v > alpha:
+                alpha = v
+                # update best action 
+            
+        return v
+
+        # v = float("-inf")
+        # actions = []
+        # for a in gameState.getLegalActions(agentIndex=0):
+        #     succ = gameState.getNextState(agentIndex=0, action=a)
+        #     u = self.min_value(
+        #         succ, agent=1, ,depth=self.depth
+        #     )
+        #     if u == v:
+        #         actions.append(a)
+        #     elif u > v:
+        #         v = u
+        #         actions = [a]
+
+        #     if v > beta:
+        #         return v  
+
+        #     # update alpha  
+        #     #alpha = max(alpha, v)
+        #     if v > alpha:
+        #         alpha = v
+        #         # update best action 
+        #         self.best_action = actions[0]
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
