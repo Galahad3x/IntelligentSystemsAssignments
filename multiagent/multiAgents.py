@@ -120,6 +120,7 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        print(f'Depth{depth}'.center(50, '='))
     
     def terminal_test(self, state, depth):
         return depth == 0 or state.isWin() or state.isLose()
@@ -153,7 +154,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
         v = float("-inf")
         actions = []
         for a in gameState.getLegalActions(agentIndex=0):
@@ -163,7 +163,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             )
             if u == v:
                 actions.append(a)
-            elif u >= v:
+            elif u > v:
                 v = u
                 actions = [a]
         
@@ -184,11 +184,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             else:
                 v = min(
-                    v, self.min_value(succ, agent= agent + 1, depth=depth - 1)
+                    v, self.min_value(succ, agent=agent + 1, depth=depth)
                 )
         return v
 
-    
     
     def max_value(self, gameState, agent, depth):
         if self.terminal_test(gameState, depth):
@@ -215,7 +214,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
         alpha = float("-inf")
         beta = float("inf")
         self.max_value(gameState, agent=0, alpha=alpha, beta=beta, depth=self.depth)
@@ -235,10 +233,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
             else:
                 v = min(
-                    v, self.min_value(succ, agent= agent + 1, alpha=alpha, beta=beta, depth=depth - 1)
+                    v, self.min_value(succ, agent= agent + 1, alpha=alpha, beta=beta, depth=depth)
                 )
             
-            # chek if prune
+            # check if prune
             if v < alpha:
                 return v
 
@@ -263,36 +261,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return v  
 
             # update alpha  
-            #alpha = max(alpha, v)
             if v > alpha:
                 alpha = v
                 # update best action 
-            
+                self.best_action = a # current level best action
         return v
-
-        # v = float("-inf")
-        # actions = []
-        # for a in gameState.getLegalActions(agentIndex=0):
-        #     succ = gameState.getNextState(agentIndex=0, action=a)
-        #     u = self.min_value(
-        #         succ, agent=1, ,depth=self.depth
-        #     )
-        #     if u == v:
-        #         actions.append(a)
-        #     elif u > v:
-        #         v = u
-        #         actions = [a]
-
-        #     if v > beta:
-        #         return v  
-
-        #     # update alpha  
-        #     #alpha = max(alpha, v)
-        #     if v > alpha:
-        #         alpha = v
-        #         # update best action 
-        #         self.best_action = actions[0]
-
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
