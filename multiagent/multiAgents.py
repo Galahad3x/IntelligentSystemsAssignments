@@ -167,7 +167,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 v = u
                 actions = [a]
         
-        # return random.choice(actions)
         return actions[0]
 
     def min_value(self, gameState, agent, depth):
@@ -233,7 +232,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
             else:
                 v = min(
-                    v, self.min_value(succ, agent= agent + 1, alpha=alpha, beta=beta, depth=depth)
+                    v, self.min_value(succ, agent=agent + 1, alpha=alpha, beta=beta, depth=depth)
                 )
             
             # check if prune
@@ -280,8 +279,46 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        v = float("-inf")
+        actions = []
+        for a in gameState.getLegalActions(agentIndex=0):
+            succ = gameState.getNextState(agentIndex=0, action=a)
+            u = self.chance_value(
+                succ, agent=1, depth=self.depth
+            )
+            if u == v:
+                actions.append(a)
+            elif u > v:
+                v = u
+                actions = [a]
+        
+        return actions[0]
+    
+    def max_value(self, gameState, agent, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)
+
+        v = float("-inf")
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            v = max(
+                v, self.chance_value(succ, agent=1, depth=depth)
+            )
+        return v
+
+    def chance_value(self, gameState, agent, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)    
+        v = 0
+        n_actions = len(gameState.getLegalActions(agent))
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            if agent == gameState.getNumAgents() - 1:
+                v += 1/n_actions * self.max_value(succ, 0, depth-1)
+            else:
+                v += 1/n_actions * self.chance_value(succ, agent+1, depth)
+        return v
+
 
 def betterEvaluationFunction(currentGameState):
     """
