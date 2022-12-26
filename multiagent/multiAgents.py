@@ -12,6 +12,7 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
+import sys
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -180,6 +181,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
+
         v = float("-inf")
         actions = []
         for a in gameState.getLegalActions(agentIndex=0):
@@ -192,7 +194,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             elif u > v:
                 v = u
                 actions = [a]
-
+        
         # return random.choice(actions)
         return actions[0]
 
@@ -225,6 +227,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 v, self.min_value(succ, agent=1, depth=depth)
             )
         return v
+
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -303,10 +306,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        actions = gameState.getLegalActions(agentIndex=0)
-        print(actions)
+        v = float("-inf")
+        actions = []
+        for a in gameState.getLegalActions(agentIndex=0):
+            succ = gameState.getNextState(agentIndex=0, action=a)
+            u = self.chance_value(
+                succ, agent=1, depth=self.depth
+            )
+            if u == v:
+                actions.append(a)
+            elif u > v:
+                v = u
+                actions = [a]
+
         return actions[0]
+
+    def max_value(self, gameState, agent, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)
+
+        v = float("-inf")
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            v = max(
+                v, self.chance_value(succ, agent=1, depth=depth)
+            )
+        return v
+
+    def chance_value(self, gameState, agent, depth):
+        if self.terminal_test(gameState, depth):
+            return self.evaluationFunction(gameState)
+        v = 0
+        n_actions = len(gameState.getLegalActions(agent))
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            if agent == gameState.getNumAgents() - 1:
+                v += 1/n_actions * self.max_value(succ, 0, depth-1)
+            else:
+                v += 1/n_actions * self.chance_value(succ, agent+1, depth)
+        return v
 
 
 def betterEvaluationFunction(currentGameState):
@@ -344,3 +382,129 @@ def betterEvaluationFunction(currentGameState):
 
 # Abbreviation
 better = betterEvaluationFunction
+
+
+class IterativeMinMax(MultiAgentSearchAgent):
+    """
+      Minx Max interative version
+    """
+
+    class Node:
+        depth = None
+        action = None
+        actor = None
+        value = None
+        state = None
+        best_action=None
+        expanded=False
+        agent = None
+        parent = None
+
+        def __init__(self, state, agent, action, actor, depth, value, parent):
+            self.state = state
+            self.action = action,
+            self.actor = actor
+            self.depth = depth
+            self.value = value
+            self.agent = agent
+            self.parent = parent
+
+    def getAction(self, gameState):
+        """
+        Returns the minmax action using self.depth and self.evaluationFunction
+        """
+        start_node = MinimaxAgent.Node(
+            state=gameState,
+            agent=0,
+            action=None,
+            actor="max",
+            depth=self.depth, # set as depth + 1  becouse the first node it is aditional
+            value=float("-inf"),
+            parent=None
+        )
+        # apply min max algorithm
+        self.stack = [start_node]
+        while self.stack:
+            current_node = self.stack[-1]
+            # check if the current state it is a terminal state
+            if self.terminal_test(current_node.state, current_node.depth):
+                self.pop_node(current_node, is_terminal=True)
+            elif not current_node.expanded:
+                self.expand_node(current_node)
+            else:
+               self.pop_node(current_node)
+
+        return self.best_action
+
+    def expand_node(self, node):
+        # check how expand the node
+        if node.actor == "max":
+           self.max_player_expand(node)
+        else:
+            self.min_player_expand(node)
+        # mark the node as expanded
+        node.expanded = True
+
+    def max_player_expand(self, node):
+        gameState = node.state
+        agent = node.agent
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            next_node = MinimaxAgent.Node(
+                state=succ,
+                agent=1,
+                action=a,
+                actor="min",
+                depth=node.depth,
+                value=float("inf"),
+                parent=node
+            )
+            self.stack.append(next_node)
+
+    def min_player_expand(self, node):
+        gameState = node.state
+        agent = node.agent
+        for a in gameState.getLegalActions(agent):
+            succ = gameState.getNextState(agent, action=a)
+            if agent == gameState.getNumAgents() - 1:
+                next_node = MinimaxAgent.Node(
+                    state=succ,
+                    agent=0,
+                    action=a,
+                    actor="max",
+                    depth=node.depth - 1,
+                    value=float("-inf"),
+                    parent=node
+                )
+            else:
+                next_node = MinimaxAgent.Node(
+                    state=succ,
+                    agent=node.agent + 1,
+                    action=a,
+                    actor="min",
+                    depth=node.depth,
+                    value=float("inf"),
+                    parent=node
+                )
+            self.stack.append(next_node)
+
+    def pop_node(self, node, is_terminal=False):
+        # pop node
+        self.stack.pop()
+
+        # if the node it is the first update the best_action
+        if node.parent is None:
+            self.best_action = node.best_action[0]
+            return
+
+        # update parent best action
+        value = self.evaluationFunction(node.state) if is_terminal else node.value
+        parent_node = node.parent
+        if parent_node.actor == "max" and value >= parent_node.value:
+            parent_node.value = value
+            parent_node.best_action = node.action
+        elif parent_node.actor == "min" and value <= parent_node.value:
+            parent_node.value = value
+            parent_node.best_action = node.action
+
+
