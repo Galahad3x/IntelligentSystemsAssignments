@@ -143,7 +143,7 @@ class MultiAgentSearchAgent(Agent):
     is another abstract class.
     """
 
-    def __init__(self, evalFn='scoreEvaluationFunction', depth='2'):
+    def __init__(self, evalFn='betterEvaluationFunction', depth='2'):
         self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
@@ -355,28 +355,39 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     score = 0
+    print("------------")
+    foodList = currentGameState.getFood().asList()
+    pacman = currentGameState.getPacmanPosition()
     # Amount of food
-    food = currentGameState.getFood()
-    score += (1.0 / len(food)) * 10
+        # The less amount of food left, the better
+    food_amount_score = len(foodList)
+    print("FOOD AMOUNT: ", food_amount_score)
     # Pacman distance to food
-    food_score = 0
-    pacman_pos = currentGameState.getPacmanPosition()
-    for food_pos in food:
-        d = manhattanDistance(pacman_pos, food_pos)
-        food_score += 10 if d == 0 else 1.0 / (d ** 2) * 10
+    food_distance_score = 0
+    for food in foodList:
+        food_distance_score += (manhattanDistance(pacman, food) ** 2)
+    food_distance_score /= len(foodList)
+    print("FOOD DISTANCE: ", food_distance_score)
+    # Closeness of food
+        # If the food items are closer, better
+    food_closeness_score = 0
+    for food in foodList:
+        for food2 in foodList:
+            food_closeness_score += (manhattanDistance(food, food2) / 2)
+    food_closeness_score /= len(foodList)
+    print("FOOD CLOSENESS: ", food_closeness_score)
     # Amount of ghosts
-    ghost_score = 0
-    ghost_states = currentGameState.getGhostStates()
-    score += (1.0 / len(ghost_states)) * 12
-    for ghost in ghost_states:
-        d = manhattanDistance(ghost.getPosition(), pacman_pos)
-        if d > 1:
-            # Distance to ghosts
-            ghost_score += (1.0 / d ** 2)
-            continue
-        ghost_score += 3000 if ghost.scaredTimer != 0 else -3000
-    score += ghost_score
-    # Game score
+    # Pacman distance to ghosts
+        # If the ghost is normal, the further, the better
+        # If the ghost is scared, the closer, the better
+    # Closeness of ghosts
+
+    # Weighted average
+    score -= food_amount_score
+    score -= food_distance_score
+    score -= food_closeness_score
+    print("SCORE: ", score)
+    score = 0
     return score
 
 
@@ -386,7 +397,7 @@ better = betterEvaluationFunction
 
 class IterativeMinMax(MultiAgentSearchAgent):
     """
-      Minx Max interative version
+      Mini Max interative version
     """
 
     class Node:
