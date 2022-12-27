@@ -102,31 +102,7 @@ def scoreEvaluationFunction(currentGameState):
     This evaluation function is meant for use with adversarial search agents
     (not reflex agents).
     """
-    score = 0
-    # Amount of food
-    food = currentGameState.getFood()
-    score += (1.0 / len(food)) * 10
-    # Pacman distance to food
-    food_score = 0
-    pacman_pos = currentGameState.getPacmanPosition()
-    for food_pos in food:
-        d = manhattanDistance(pacman_pos, food_pos)
-        food_score += 10 if d == 0 else 1.0 / (d ** 2) * 10
-    # Amount of ghosts
-    ghost_score = 0
-    ghost_states = currentGameState.getGhostStates()
-    score += (1.0 / len(ghost_states)) * 12
-    for ghost in ghost_states:
-        d = manhattanDistance(ghost.getPosition(), pacman_pos)
-        if d > 1:
-            # Distance to ghosts
-            ghost_score += (1.0 / d ** 2)
-            continue
-        ghost_score += 3000 if ghost.scaredTimer != 0 else -3000
-    score += ghost_score
-    # Game score
-    return score
-
+    return currentGameState.getScore()
 
 class MultiAgentSearchAgent(Agent):
     """
@@ -143,7 +119,7 @@ class MultiAgentSearchAgent(Agent):
     is another abstract class.
     """
 
-    def __init__(self, evalFn='betterEvaluationFunction', depth='2'):
+    def __init__(self, evalFn='scoreEvaluationFunction', depth='2'):
         self.index = 0  # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
@@ -389,6 +365,7 @@ def betterEvaluationFunction(currentGameState):
     print("SCORE: ", score)
     score = 0
     return score
+    util.raiseNotDefined()  
 
 
 # Abbreviation
