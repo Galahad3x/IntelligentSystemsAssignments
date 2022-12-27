@@ -364,12 +364,12 @@ class IterativeMinMax(MultiAgentSearchAgent):
         """
         Returns the minmax action using self.depth and self.evaluationFunction
         """
-        start_node = MinimaxAgent.Node(
+        start_node = self.Node(
             state=gameState,
             agent=0,
             action=None,
             actor="max",
-            depth=self.depth, # set as depth + 1  becouse the first node it is aditional
+            depth=self.depth,
             value=float("-inf"),
             parent=None
         )
@@ -401,7 +401,7 @@ class IterativeMinMax(MultiAgentSearchAgent):
         agent = node.agent
         for a in gameState.getLegalActions(agent):
             succ = gameState.getNextState(agent, action=a)
-            next_node = MinimaxAgent.Node(
+            next_node = self.Node(
                 state=succ, 
                 agent=1,
                 action=a,
@@ -418,7 +418,7 @@ class IterativeMinMax(MultiAgentSearchAgent):
         for a in gameState.getLegalActions(agent):
             succ = gameState.getNextState(agent, action=a)
             if agent == gameState.getNumAgents() - 1:
-                next_node = MinimaxAgent.Node(
+                next_node = self.Node(
                     state=succ, 
                     agent=0,
                     action=a,
@@ -428,7 +428,7 @@ class IterativeMinMax(MultiAgentSearchAgent):
                     parent=node
                 )
             else:
-                next_node = MinimaxAgent.Node(
+                next_node = self.Node(
                     state=succ, 
                     agent=node.agent + 1,
                     action=a,
@@ -442,7 +442,7 @@ class IterativeMinMax(MultiAgentSearchAgent):
     def pop_node(self, node, is_terminal=False):
         # pop node
         self.stack.pop()
-        
+
         # if the node it is the first update the best_action
         if node.parent is None:
             self.best_action = node.best_action[0]
