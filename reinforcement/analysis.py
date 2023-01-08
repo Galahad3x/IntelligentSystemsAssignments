@@ -76,7 +76,6 @@ def question3c():
         By slightly negatively penalizing staying alive, the agent tends to try to explore 
         more space by missing the terminal position with a reward of 1.0. But tending to go to 
         the position with value 10 so as not to end up with a negative reward.
-
     """
     answerDiscount = 0.8
     answerNoise = 0.1
@@ -95,7 +94,6 @@ def question3d():
         the agent to try not to play it. On the other hand, as it approaches the terminal reward 
         position 10, its influence due to not receiving any other reward will tend for the agent 
         to go to that position.
-
     """
     answerDiscount = 0.9
     answerNoise = 0.2
