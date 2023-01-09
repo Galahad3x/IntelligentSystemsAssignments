@@ -340,32 +340,42 @@ def betterEvaluationFunction(currentGameState):
     print("FOOD AMOUNT: ", food_amount_score)
     # Pacman distance to food
     food_distance_score = 0
+    min_food = float("inf")
     for food in foodList:
-        food_distance_score += (manhattanDistance(pacman, food) ** 2)
-    food_distance_score /= len(foodList)
+        d = (manhattanDistance(pacman, food) ** 2)
+        if d < min_food:
+            min_food = d
+        food_distance_score += d
     print("FOOD DISTANCE: ", food_distance_score)
-    # Closeness of food
-        # If the food items are closer, better
-    food_closeness_score = 0
-    for food in foodList:
-        for food2 in foodList:
-            food_closeness_score += (manhattanDistance(food, food2) / 2)
-    food_closeness_score /= len(foodList)
-    print("FOOD CLOSENESS: ", food_closeness_score)
-    # Amount of ghosts
-    # Pacman distance to ghosts
-        # If the ghost is normal, the further, the better
-        # If the ghost is scared, the closer, the better
-    # Closeness of ghosts
+
+    ghosts = 0
+    for ghost_position in currentGameState.getGhostPositions():
+        ghost_distance = manhattanDistance(pacman, ghost_position)
+
+        if ghost_distance < 2:
+            ghosts = 1
 
     # Weighted average
-    score -= food_amount_score
-    score -= food_distance_score
-    score -= food_closeness_score
+    features = [
+        food_amount_score,
+        food_distance_score,
+        1.0 / min_food,
+        currentGameState.getScore(),
+        ghosts
+    ]
+
+    weights = [
+        -100,
+        -1,
+        200,
+        200,
+        10
+    ]
+
+    score = sum([(feat * weight) for feat, weight in zip(features, weights)])
+    print([(feat * weight) for feat, weight in zip(features, weights)])
     print("SCORE: ", score)
-    score = 0
     return score
-    util.raiseNotDefined()  
 
 
 # Abbreviation
