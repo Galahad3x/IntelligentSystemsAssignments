@@ -330,14 +330,11 @@ def betterEvaluationFunction(currentGameState):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    score = 0
-    print("------------")
     foodList = currentGameState.getFood().asList()
     pacman = currentGameState.getPacmanPosition()
     # Amount of food
         # The less amount of food left, the better
     food_amount_score = len(foodList)
-    print("FOOD AMOUNT: ", food_amount_score)
     # Pacman distance to food
     food_distance_score = 0
     min_food = float("inf")
@@ -346,7 +343,6 @@ def betterEvaluationFunction(currentGameState):
         if d < min_food:
             min_food = d
         food_distance_score += d
-    print("FOOD DISTANCE: ", food_distance_score)
 
     ghosts = 0
     for ghost_position in currentGameState.getGhostPositions():
@@ -361,7 +357,7 @@ def betterEvaluationFunction(currentGameState):
         food_distance_score,
         1.0 / min_food,
         currentGameState.getScore(),
-        ghosts
+        ghosts,
     ]
 
     weights = [
@@ -369,7 +365,7 @@ def betterEvaluationFunction(currentGameState):
         -1,
         200,
         200,
-        10
+        10,
     ]
 
     score = sum([(feat * weight) for feat, weight in zip(features, weights)])
